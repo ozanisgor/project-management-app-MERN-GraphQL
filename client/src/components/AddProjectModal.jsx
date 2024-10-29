@@ -1,8 +1,9 @@
 import { useMutation, useQuery } from "@apollo/client";
 import { useState } from "react";
 import { FaList } from "react-icons/fa";
-import { GET_PROJECTS } from "../queries/projectQueries";
+import { ADD_PROJECT } from "../mutations/projectMutations";
 import { GET_CLIENTS } from "../queries/clientQueries";
+import { GET_PROJECTS } from "../queries/projectQueries";
 
 export default function AddProjectModal() {
   const [name, setName] = useState("");
@@ -10,6 +11,16 @@ export default function AddProjectModal() {
   const [clientId, setClientId] = useState("");
   const [status, setStatus] = useState("new");
 
+  const [addProject] = useMutation(ADD_PROJECT, {
+    variables: { name, description, status, clientId },
+    update(cache, { data: { addProject } }) {
+      const { projects } = cache.readQuery({ query: GET_PROJECTS });
+      cache.writeQuery({
+        query: GET_PROJECTS,
+        data: { projects: [...projects, addProject] },
+      });
+    },
+  });
   const { loading, error, data } = useQuery(GET_CLIENTS);
 
   const onSubmit = (e) => {
@@ -19,6 +30,7 @@ export default function AddProjectModal() {
       return alert("Please fill in all fields");
     }
 
+    addProject(name, description, status, clientId);
     setName("");
     setDescription("");
     setStatus("new");
@@ -108,7 +120,7 @@ export default function AddProjectModal() {
                         onChange={(e) => setClientId(e.target.value)}
                       >
                         <option value="">Select Client</option>
-                        {data.length > 0 &&
+                        {data.clients.length > 0 &&
                           data.clients.map((client) => (
                             <option key={client.id} value={client.id}>
                               {client.name}
