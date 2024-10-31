@@ -1,4 +1,4 @@
-# Project Management App (MERN + GraphQL)
+# Project Management App (MERN + GraphQL + TypeScript)
 
 A full-stack project management application built with the MERN stack and GraphQL. The app allows users to manage clients and projects, supporting features like adding, updating, and deleting both clients and projects. This application uses Apollo Client on the frontend to interact with a GraphQL API on the backend.
 
