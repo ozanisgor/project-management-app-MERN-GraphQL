@@ -1,6 +1,7 @@
-import { gql } from "@apollo/client";
+// import { gql } from "@apollo/client";
+import { gql } from "../__generated__";
 
-const GET_PROJECTS = gql`
+const GET_PROJECTS = gql(`
   query getProjects {
     projects {
       id
@@ -8,9 +9,9 @@ const GET_PROJECTS = gql`
       status
     }
   }
-`;
+`);
 
-const GET_PROJECT = gql`
+const GET_PROJECT = gql(`
   query getProject($id: ID!) {
     project(id: $id) {
       id
@@ -25,6 +26,6 @@ const GET_PROJECT = gql`
       }
     }
   }
-`;
+`);
 
 export { GET_PROJECT, GET_PROJECTS };

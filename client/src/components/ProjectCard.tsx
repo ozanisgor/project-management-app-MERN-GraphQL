@@ -1,4 +1,6 @@
-export default function ProjectCard({ project }) {
+import { Project } from "../types";
+
+export default function ProjectCard({ project }: { project: Project }) {
   return (
     <div className="col-md-6">
       <div className="card mb-3">

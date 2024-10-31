@@ -1,6 +1,7 @@
 import { useMutation } from "@apollo/client";
-import { useState } from "react";
+import React, { useState } from "react";
 import { FaUser } from "react-icons/fa";
+import { GetClientsQuery } from "../__generated__/graphql";
 import { ADD_CLIENT } from "../mutations/clientMutations";
 import { GET_CLIENTS } from "../queries/clientQueries";
 
@@ -12,24 +13,33 @@ export default function AddClientModal() {
   const [addClient] = useMutation(ADD_CLIENT, {
     variables: { name, email, phone },
     // refetchQueries: [{ query: GET_CLIENTS }],
-    update(cache, { data: { addClient } }) {
-      const { clients } = cache.readQuery({ query: GET_CLIENTS });
+    update(cache, { data }) {
+      const addedClient = data?.addClient;
+      if (!addedClient) return;
+
+      const existingClients = cache.readQuery<GetClientsQuery>({
+        query: GET_CLIENTS,
+      });
 
       cache.writeQuery({
         query: GET_CLIENTS,
-        data: { clients: [...clients, addClient] },
+        data: {
+          clients: existingClients?.clients
+            ? [...existingClients.clients, addedClient]
+            : [addedClient],
+        },
       });
     },
   });
 
-  const onSubmit = (e) => {
+  const onSubmit = (e: React.SyntheticEvent) => {
     e.preventDefault();
 
     if (name === "" || email === "" || phone === "") {
       return alert("Please fill in all fields");
     }
 
-    addClient(name, email, phone);
+    addClient({ variables: { name, email, phone } });
 
     setName("");
     setEmail("");

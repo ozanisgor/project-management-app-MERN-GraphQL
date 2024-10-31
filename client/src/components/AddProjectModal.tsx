@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from "@apollo/client";
 import { useState } from "react";
 import { FaList } from "react-icons/fa";
+import { GetProjectsQuery, ProjectStatus } from "../__generated__/graphql";
 import { ADD_PROJECT } from "../mutations/projectMutations";
 import { GET_CLIENTS } from "../queries/clientQueries";
 import { GET_PROJECTS } from "../queries/projectQueries";
@@ -12,25 +13,42 @@ export default function AddProjectModal() {
   const [status, setStatus] = useState("new");
 
   const [addProject] = useMutation(ADD_PROJECT, {
-    variables: { name, description, status, clientId },
-    update(cache, { data: { addProject } }) {
-      const { projects } = cache.readQuery({ query: GET_PROJECTS });
+    variables: { name, description, status: status as ProjectStatus, clientId },
+    update(cache, { data }) {
+      const addedProject = data?.addProject;
+      if (!addedProject) return;
+
+      const existingProjects = cache.readQuery<GetProjectsQuery>({
+        query: GET_PROJECTS,
+      });
+
       cache.writeQuery({
         query: GET_PROJECTS,
-        data: { projects: [...projects, addProject] },
+        data: {
+          projects: existingProjects?.projects
+            ? [...existingProjects.projects, addedProject]
+            : [addedProject],
+        },
       });
     },
   });
   const { loading, error, data } = useQuery(GET_CLIENTS);
 
-  const onSubmit = (e) => {
+  const onSubmit = (e: React.SyntheticEvent) => {
     e.preventDefault();
 
     if (name === "" || description === "" || status === "") {
       return alert("Please fill in all fields");
     }
 
-    addProject(name, description, status, clientId);
+    addProject({
+      variables: {
+        name,
+        description,
+        status: status as ProjectStatus,
+        clientId,
+      },
+    });
     setName("");
     setDescription("");
     setStatus("new");
@@ -120,12 +138,11 @@ export default function AddProjectModal() {
                         onChange={(e) => setClientId(e.target.value)}
                       >
                         <option value="">Select Client</option>
-                        {data.clients.length > 0 &&
-                          data.clients.map((client) => (
-                            <option key={client.id} value={client.id}>
-                              {client.name}
-                            </option>
-                          ))}
+                        {data?.clients?.map((client) => (
+                          <option key={client?.id} value={client?.id || ""}>
+                            {client?.name}
+                          </option>
+                        ))}
                       </select>
                     </div>
 

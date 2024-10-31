@@ -1,6 +1,7 @@
 import { FaEnvelope, FaPhone, FaIdBadge } from "react-icons/fa";
+import { ClientData } from "../types";
 
-export default function ClientInfo({ client }) {
+export default function ClientInfo({ client }: ClientData) {
   return (
     <>
       <h5 className="mt-5">Client Information</h5>

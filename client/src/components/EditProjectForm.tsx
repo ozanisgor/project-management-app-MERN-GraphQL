@@ -2,11 +2,28 @@ import { useMutation } from "@apollo/client";
 import { useState } from "react";
 import { UPDATE_PROJECT } from "../mutations/projectMutations";
 import { GET_PROJECT } from "../queries/projectQueries";
+import { ProjectData } from "../types";
+import { ProjectStatusUpdate } from "../__generated__/graphql";
 
-export default function EditProjectForm({ project }) {
+const getStatusKey = (status: string): ProjectStatusUpdate => {
+  switch (status) {
+    case "Not Started":
+      return ProjectStatusUpdate.New;
+    case "In Progress":
+      return ProjectStatusUpdate.Progress;
+    case "Completed":
+      return ProjectStatusUpdate.Completed;
+    default:
+      return ProjectStatusUpdate.New;
+  }
+};
+
+export default function EditProjectForm({ project }: ProjectData) {
   const [name, setName] = useState(project.name);
   const [description, setDescription] = useState(project.description);
-  const [status, setStatus] = useState("");
+  const [status, setStatus] = useState<ProjectStatusUpdate>(
+    getStatusKey(project.status)
+  );
 
   const [updateProject] = useMutation(UPDATE_PROJECT, {
     variables: {
@@ -18,14 +35,21 @@ export default function EditProjectForm({ project }) {
     refetchQueries: [{ query: GET_PROJECT, variables: { id: project.id } }],
   });
 
-  const onSubmit = (e) => {
+  const onSubmit = (e: React.SyntheticEvent) => {
     e.preventDefault();
 
     if (!name || !description || !status) {
       return alert("Please fill in all fields");
     }
 
-    updateProject(name, description, status);
+    updateProject({
+      variables: {
+        id: project.id,
+        name,
+        description,
+        status,
+      },
+    });
   };
 
   return (
@@ -54,15 +78,14 @@ export default function EditProjectForm({ project }) {
         <div className="mb-3">
           <label className="form-label">Status</label>
           <select
-            name=""
             id="status"
             className="form-select"
             value={status}
-            onChange={(e) => setStatus(e.target.value)}
+            onChange={(e) => setStatus(e.target.value as ProjectStatusUpdate)}
           >
-            <option value="new">Not Started</option>
-            <option value="progress">In Progres</option>
-            <option value="completed">Completed</option>
+            <option value={ProjectStatusUpdate.New}>Not Started</option>
+            <option value={ProjectStatusUpdate.Progress}>In Progress</option>
+            <option value={ProjectStatusUpdate.Completed}>Completed</option>
           </select>
         </div>
 
